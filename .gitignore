@@ -1,0 +1,30 @@
+# Ignore Unity-generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+# Ignore VS/VSCode project files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# Ignore OS junk
+.DS_Store
+Thumbs.db
+
+# VSCode settings (keep shared settings if you want)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
