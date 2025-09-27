@@ -66,5 +66,8 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj",
     },
+    "files.eol": "\n",
+    "editor,formatOnSave": true,
+    "omnisharp.useModernNet": true,
     "dotnet.defaultSolution": "DartsGame.sln"
 }
