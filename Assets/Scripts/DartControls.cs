@@ -21,7 +21,9 @@ public class DartControls : MonoBehaviour
     private bool startedDrag;
     private bool released = false;
 
-    private const float impulseScaler = 0.0002f;
+    private const float impulseScalerX = 0.00001f;
+    private const float impulseScalerZ = 0.00006f;
+    private const float impulseScalerTheta = 0.3f;
     private const float maxTheta = 60f;
 
     // Awake is called when the script instance is being loaded
@@ -112,15 +114,17 @@ public class DartControls : MonoBehaviour
 
         if (startedDrag && released)
         {
-            var throwMagnitude = mouseVelocity.magnitude;
-            float impulseX = mouseVelocity.x * impulseScaler;
-            float impulseZ = mouseVelocity.y * impulseScaler;
+            float impulseX = mouseVelocity.x * impulseScalerX;
+            float impulseZ = mouseVelocity.y * impulseScalerZ;
 
-            float h = (float)Screen.currentResolution.height;
-            float yNorm = 1f - (releaseMouseY / h);
+            float screenHeight = (float)Screen.currentResolution.height;
+            float yNorm = 1f - (releaseMouseY / screenHeight);
 
             float theta = yNorm * maxTheta;
-            float impulseY = Mathf.Tan(theta * Mathf.Deg2Rad) * throwMagnitude * impulseScaler;
+
+            float h = Mathf.Sqrt(impulseX * impulseX + impulseZ * impulseZ);
+
+            float impulseY = Mathf.Tan(theta * Mathf.Deg2Rad) * h * impulseScalerTheta;
 
             Vector3 impulse = new Vector3(impulseX, impulseY, impulseZ);
 
@@ -129,7 +133,7 @@ public class DartControls : MonoBehaviour
 
             rb.AddForce(impulse, ForceMode.Impulse);
 
-            Debug.Log($"Applied Impulse: {impulse}  -> mass={rb.mass}, Δv ≈ {impulse / rb.mass}");
+            Debug.Log($"Applied Impulse: {impulse:F6}  -> mass={rb.mass}, Δv ≈ {impulse / rb.mass}");
 
             startedDrag = false;
             released = false;
