@@ -11,17 +11,18 @@ public class DartControls : MonoBehaviour
     private Plane dragPlane;
     private Vector3 grabOffset;
     private Vector3 targetPos;
+
     private Vector2 lastMousePos;
     private Vector2 mouseDelta = Vector2.zero;
     private Vector2 mouseVelocity = Vector2.zero;
-    private float releasePoint;
+    
+    private float releaseMouseY;
     private bool isDragging;
     private bool startedDrag;
-    private const float throwVelocityScalerX = 0.0002f;
-    private const float throwVelocityScalerY = 0.0001f;
-    private const float throwVelocityScalerZ = 0.0023f;
-
     private bool released = false;
+
+    private const float impulseScaler = 0.0002f;
+    private const float maxTheta = 60f;
 
     // Awake is called when the script instance is being loaded
     private void Awake()
@@ -91,8 +92,8 @@ public class DartControls : MonoBehaviour
 
             if (released)
             {
-                mouseDelta = mouse.position.ReadValue() - lastMousePos;
-                releasePoint = Screen.currentResolution.height / mouse.position.ReadValue().y;
+                mouseDelta = mousePos - lastMousePos;
+                releaseMouseY = mouse.position.ReadValue().y;
                 mouseVelocity = mouseDelta / Time.deltaTime;
                 isDragging = false;
             }
@@ -108,22 +109,30 @@ public class DartControls : MonoBehaviour
         {
             rb.MovePosition(targetPos);
         }
-        
-        if (startedDrag)
+
+        if (startedDrag && released)
         {
-            if (released)
-            {
-                float releaseVelocity = releasePoint * mouseVelocity.magnitude;
-                float throwY = releaseVelocity * throwVelocityScalerY;
-                float throwX = mouseVelocity.x * throwVelocityScalerX;
-                float throwZ = mouseVelocity.y * throwVelocityScalerZ;
-                Vector3 throwVelocity = new Vector3(throwX, throwY, throwZ);
-                rb.isKinematic = false;
-                rb.useGravity = true;
-                rb.linearVelocity = throwVelocity;
-                Debug.Log($"Applied Velocity: {rb.linearVelocity}");
-                released = false;
-            }
+            var throwMagnitude = mouseVelocity.magnitude;
+            float impulseX = mouseVelocity.x * impulseScaler;
+            float impulseZ = mouseVelocity.y * impulseScaler;
+
+            float h = (float)Screen.currentResolution.height;
+            float yNorm = 1f - (releaseMouseY / h);
+
+            float theta = yNorm * maxTheta;
+            float impulseY = Mathf.Tan(theta * Mathf.Deg2Rad) * throwMagnitude * impulseScaler;
+
+            Vector3 impulse = new Vector3(impulseX, impulseY, impulseZ);
+
+            rb.isKinematic = false;
+            rb.useGravity = true;
+
+            rb.AddForce(impulse, ForceMode.Impulse);
+
+            Debug.Log($"Applied Impulse: {impulse}  -> mass={rb.mass}, Δv ≈ {impulse / rb.mass}");
+
+            startedDrag = false;
+            released = false;
         }
     }
 
