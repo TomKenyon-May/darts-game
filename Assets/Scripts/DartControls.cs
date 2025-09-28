@@ -17,8 +17,9 @@ public class DartControls : MonoBehaviour
     private float releasePoint;
     private bool isDragging;
     private bool startedDrag;
-    private const float throwVelocityScaler = 0.002f;
-    private const float throwAngleScaler = 400f;
+    private const float throwVelocityScalerX = 0.0002f;
+    private const float throwVelocityScalerY = 0.7f;
+    private const float throwVelocityScalerZ = 0.0023f;
 
     private bool released = false;
 
@@ -91,7 +92,7 @@ public class DartControls : MonoBehaviour
             if (released)
             {
                 mouseDelta = mouse.position.ReadValue() - lastMousePos;
-                releasePoint = mouse.position.ReadValue().y / Screen.currentResolution.height;
+                releasePoint = Screen.currentResolution.height / mouse.position.ReadValue().y;
                 mouseVelocity = mouseDelta / Time.deltaTime;
                 isDragging = false;
             }
@@ -112,12 +113,13 @@ public class DartControls : MonoBehaviour
         {
             if (released)
             {
-                float throwY = releasePoint * throwAngleScaler;
-                Vector3 throwVelocity = new Vector3(mouseVelocity.x, throwY, mouseVelocity.y);
+                float throwY = releasePoint * throwVelocityScalerY;
+                float throwX = mouseVelocity.x * throwVelocityScalerX;
+                float throwZ = mouseVelocity.y * throwVelocityScalerZ;
+                Vector3 throwVelocity = new Vector3(throwX, throwY, throwZ);
                 rb.isKinematic = false;
                 rb.useGravity = true;
-                Debug.Log($"Throw Velocity: {throwVelocity}");
-                rb.linearVelocity = throwVelocity * throwVelocityScaler;
+                rb.linearVelocity = throwVelocity;
                 Debug.Log($"Applied Velocity: {rb.linearVelocity}");
                 released = false;
             }
