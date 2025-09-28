@@ -5,8 +5,7 @@ public class DartControls : MonoBehaviour
 {
     // Rigidbody component of the dart
     private Rigidbody rb;
-    [SerializeField] Camera cam;
-    [SerializeField] LayerMask pickMask;
+    private Camera cam;
     Plane dragPlane;
     Vector3 grabOffset;
     Vector3 targetPos;
@@ -18,14 +17,9 @@ public class DartControls : MonoBehaviour
         // Get the Rigidbody component attached to the dart
         rb = GetComponent<Rigidbody>();
 
+        // If no camera is assigned, use the main camera
         if (!cam) cam = Camera.main;
 
-        Debug.Log($"Awake: rb={rb != null}, cam={(cam ? cam.name : "NULL")}", this);
-    }
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
         // Disable gravity
         rb.useGravity = false;
 
@@ -35,48 +29,51 @@ public class DartControls : MonoBehaviour
 
         // Make the Rigidbody kinematic so the dart initially doesn't respond to physics
         rb.isKinematic = true;
-
-        Debug.Log("Start: set to kinematic + no gravity", this);
     }
 
     void Update()
     {
-        if (!isDragging && Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            var mousePos = Mouse.current.position.ReadValue();
-            var ray = cam.ScreenPointToRay(mousePos);
-            if (Physics.Raycast(ray, out var hit, Mathf.Infinity, pickMask) &&
-        (hit.rigidbody == rb || hit.transform == transform || hit.transform.IsChildOf(transform)))
-            {
-                dragPlane = new Plane(cam.transform.forward, transform.position);
+        var mouse = Mouse.current;
+        bool pressed = mouse.leftButton.wasPressedThisFrame;
 
-                if (dragPlane.Raycast(ray, out var tPlane))
+        // If not dragging and mouse button not pressed, do nothing
+        if (!isDragging && !pressed)
+        {
+            return;
+        }
+
+        bool released = mouse.leftButton.wasReleasedThisFrame;
+        var mousePos = mouse.position.ReadValue();
+        Ray ray = cam.ScreenPointToRay(mousePos);
+
+        if (!isDragging && pressed)
+        {
+            if (Physics.Raycast(ray, out var hit) && hit.rigidbody == rb)
+            {
+                dragPlane = new Plane(cam.transform.forward, rb.position);
+
+                if (dragPlane.Raycast(ray, out var distance))
                 {
-                    var planeHit = ray.GetPoint(tPlane);
-                    grabOffset = transform.position - planeHit;
-                    targetPos = transform.position;
+                    var planeHit = ray.GetPoint(distance);
+                    grabOffset = rb.position - planeHit;
+                    targetPos = rb.position;
                     isDragging = true;
-                    Debug.Log($"Started drag. planeHit={planeHit}, grabOffset={grabOffset}", this);
                 }
             }
         }
 
         if (isDragging)
         {
-            var mousePos = Mouse.current.position.ReadValue();
-            var ray = cam.ScreenPointToRay(mousePos);
-
-            if (dragPlane.Raycast(ray, out var t))
+            if (dragPlane.Raycast(ray, out var distance))
             {
-                var hitOnPlane = ray.GetPoint(t);
+                var hitOnPlane = ray.GetPoint(distance);
                 targetPos = hitOnPlane + grabOffset;
             }
         }
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame)
+        if (released)
         {
             isDragging = false;
-            Debug.Log($"Ended drag at {targetPos}", this);
         }
     }
 
