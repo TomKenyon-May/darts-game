@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.InputSystem;
 // using UnityEngine.EventSystems; // Uncomment if you want the UI guard
 
@@ -13,7 +14,11 @@ public class DartControls : MonoBehaviour
     private Vector2 lastMousePos;
     private Vector2 mouseDelta = Vector2.zero;
     private Vector2 mouseVelocity = Vector2.zero;
+    private float releasePoint;
     private bool isDragging;
+    private bool startedDrag;
+    private const float throwVelocityScaler = 0.002f;
+    private const float throwAngleScaler = 400f;
 
     private bool released = false;
 
@@ -69,6 +74,7 @@ public class DartControls : MonoBehaviour
                     grabOffset = rb.position - planeHit;
                     targetPos = rb.position;
                     isDragging = true;
+                    startedDrag = true;
                 }
             }
         }
@@ -85,6 +91,7 @@ public class DartControls : MonoBehaviour
             if (released)
             {
                 mouseDelta = mouse.position.ReadValue() - lastMousePos;
+                releasePoint = mouse.position.ReadValue().y / Screen.currentResolution.height;
                 mouseVelocity = mouseDelta / Time.deltaTime;
                 isDragging = false;
             }
@@ -100,17 +107,22 @@ public class DartControls : MonoBehaviour
         {
             rb.MovePosition(targetPos);
         }
-
-        if (released)
+        
+        if (startedDrag)
         {
-            // Throw logic should go here, physics related
-            // calculate mouse velocity
-            // calulate dart direction
-            // apply gravity to dart rigidbody
-            // apply direction and velocity to dart rigidbody
+            if (released)
+            {
+                float throwY = releasePoint * throwAngleScaler;
+                Vector3 throwVelocity = new Vector3(mouseVelocity.x, throwY, mouseVelocity.y);
+                rb.isKinematic = false;
+                rb.useGravity = true;
+                Debug.Log($"Throw Velocity: {throwVelocity}");
+                rb.linearVelocity = throwVelocity * throwVelocityScaler;
+                Debug.Log($"Applied Velocity: {rb.linearVelocity}");
+                released = false;
+            }
         }
     }
-
 
     private void OnDisable()
     {
