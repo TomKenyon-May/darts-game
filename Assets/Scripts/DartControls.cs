@@ -18,7 +18,7 @@ public class DartControls : MonoBehaviour
     private bool isDragging;
     private bool startedDrag;
     private const float throwVelocityScalerX = 0.0002f;
-    private const float throwVelocityScalerY = 0.7f;
+    private const float throwVelocityScalerY = 0.0001f;
     private const float throwVelocityScalerZ = 0.0023f;
 
     private bool released = false;
@@ -113,7 +113,8 @@ public class DartControls : MonoBehaviour
         {
             if (released)
             {
-                float throwY = releasePoint * throwVelocityScalerY;
+                float releaseVelocity = releasePoint * mouseVelocity.magnitude;
+                float throwY = releaseVelocity * throwVelocityScalerY;
                 float throwX = mouseVelocity.x * throwVelocityScalerX;
                 float throwZ = mouseVelocity.y * throwVelocityScalerZ;
                 Vector3 throwVelocity = new Vector3(throwX, throwY, throwZ);
