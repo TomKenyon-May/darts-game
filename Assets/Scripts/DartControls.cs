@@ -10,7 +10,9 @@ public class DartControls : MonoBehaviour
     private Plane dragPlane;
     private Vector3 grabOffset;
     private Vector3 targetPos;
-    private Vector3 lastMousePos;
+    private Vector2 lastMousePos;
+    private Vector2 mouseDelta = Vector2.zero;
+    private Vector2 mouseVelocity = Vector2.zero;
     private bool isDragging;
 
     private bool released = false;
@@ -31,6 +33,8 @@ public class DartControls : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
         rb.isKinematic = true;
+
+        lastMousePos = Mouse.current.position.ReadValue();
     }
 
     // Update is called once per frame
@@ -80,6 +84,8 @@ public class DartControls : MonoBehaviour
 
             if (released)
             {
+                mouseDelta = mouse.position.ReadValue() - lastMousePos;
+                mouseVelocity = mouseDelta / Time.deltaTime;
                 isDragging = false;
             }
         }
@@ -105,11 +111,6 @@ public class DartControls : MonoBehaviour
         }
     }
 
-    private Vector3 CalculateMouseVelocity()
-    {
-        // Implement mouse velocity calculation
-        return Vector3.zero;
-    }
 
     private void OnDisable()
     {
