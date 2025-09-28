@@ -10,7 +10,10 @@ public class DartControls : MonoBehaviour
     private Plane dragPlane;
     private Vector3 grabOffset;
     private Vector3 targetPos;
+    private Vector3 lastMousePos;
     private bool isDragging;
+
+    private bool released = false;
 
     // Awake is called when the script instance is being loaded
     private void Awake()
@@ -45,7 +48,7 @@ public class DartControls : MonoBehaviour
         // If not dragging and mouse button not pressed, do nothing
         if (!isDragging && !pressed) return;
 
-        bool released = mouse.leftButton.wasReleasedThisFrame;
+        released = mouse.leftButton.wasReleasedThisFrame;
         var mousePos = mouse.position.ReadValue();
         Ray ray = cam.ScreenPointToRay(mousePos);
 
@@ -80,6 +83,8 @@ public class DartControls : MonoBehaviour
                 isDragging = false;
             }
         }
+
+        lastMousePos = mouse.position.ReadValue();
     }
 
     // FixedUpdate is called at a fixed interval and is independent of frame rate
@@ -89,6 +94,21 @@ public class DartControls : MonoBehaviour
         {
             rb.MovePosition(targetPos);
         }
+
+        if (released)
+        {
+            // Throw logic should go here, physics related
+            // calculate mouse velocity
+            // calulate dart direction
+            // apply gravity to dart rigidbody
+            // apply direction and velocity to dart rigidbody
+        }
+    }
+
+    private Vector3 CalculateMouseVelocity()
+    {
+        // Implement mouse velocity calculation
+        return Vector3.zero;
     }
 
     private void OnDisable()
