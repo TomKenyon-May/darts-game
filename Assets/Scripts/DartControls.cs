@@ -1,51 +1,55 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+// using UnityEngine.EventSystems; // Uncomment if you want the UI guard
 
+[RequireComponent(typeof(Rigidbody))]
 public class DartControls : MonoBehaviour
 {
-    // Rigidbody component of the dart
     private Rigidbody rb;
     private Camera cam;
-    Plane dragPlane;
-    Vector3 grabOffset;
-    Vector3 targetPos;
-    bool isDragging;
+    private Plane dragPlane;
+    private Vector3 grabOffset;
+    private Vector3 targetPos;
+    private bool isDragging;
 
     // Awake is called when the script instance is being loaded
-    void Awake()
+    private void Awake()
     {
-        // Get the Rigidbody component attached to the dart
         rb = GetComponent<Rigidbody>();
+        cam = cam ? cam : Camera.main;
 
-        // If no camera is assigned, use the main camera
-        if (!cam) cam = Camera.main;
+        if (!cam)
+        {
+            Debug.LogError("DartControls: No camera found. Assign one or tag a camera as MainCamera.", this);
+        }
 
-        // Disable gravity
         rb.useGravity = false;
-
-        // Render time smoothing and continuous collision detection
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
-        // Make the Rigidbody kinematic so the dart initially doesn't respond to physics
         rb.isKinematic = true;
     }
 
+    // Update is called once per frame
     void Update()
     {
+        // Input device may be null (rare, but safe to guard).
         var mouse = Mouse.current;
+        if (mouse == null || cam == null) return;
+
+        // Optional UI guard
+        // if (EventSystem.current && EventSystem.current.IsPointerOverGameObject()) return;
+
         bool pressed = mouse.leftButton.wasPressedThisFrame;
 
         // If not dragging and mouse button not pressed, do nothing
-        if (!isDragging && !pressed)
-        {
-            return;
-        }
+        if (!isDragging && !pressed) return;
 
         bool released = mouse.leftButton.wasReleasedThisFrame;
         var mousePos = mouse.position.ReadValue();
         Ray ray = cam.ScreenPointToRay(mousePos);
 
+        // Try to start dragging
         if (!isDragging && pressed)
         {
             if (Physics.Raycast(ray, out var hit) && hit.rigidbody == rb)
@@ -62,18 +66,19 @@ public class DartControls : MonoBehaviour
             }
         }
 
+        // Update or stop dragging
         if (isDragging)
         {
             if (dragPlane.Raycast(ray, out var distance))
             {
-                var hitOnPlane = ray.GetPoint(distance);
-                targetPos = hitOnPlane + grabOffset;
+                var planeHit = ray.GetPoint(distance);
+                targetPos = planeHit + grabOffset;
             }
-        }
 
-        if (released)
-        {
-            isDragging = false;
+            if (released)
+            {
+                isDragging = false;
+            }
         }
     }
 
@@ -84,5 +89,11 @@ public class DartControls : MonoBehaviour
         {
             rb.MovePosition(targetPos);
         }
+    }
+
+    private void OnDisable()
+    {
+        // Prevent a stuck-drag if object is disabled mid-interaction
+        isDragging = false;
     }
 }
